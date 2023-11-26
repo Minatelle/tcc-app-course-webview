@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.TargetApi
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -43,25 +44,9 @@ class MainActivity : AppCompatActivity() {
 
     private var mUploadMessage: ValueCallback<*>? = null
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_SELECT_FILE) {
-            if (null == uploadMessage) {
-                return
-            }
-            uploadMessage?.onReceiveValue(
-                WebChromeClient.FileChooserParams.parseResult(
-                    resultCode,
-                    data
-                )
-            )
-            uploadMessage = null
-
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main)
 
         webView = findViewById(R.id.webview)
@@ -142,6 +127,23 @@ class MainActivity : AppCompatActivity() {
             webView.goBack()
         } else {
             super.onBackPressed()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_SELECT_FILE) {
+            if (null == uploadMessage) {
+                return
+            }
+            uploadMessage?.onReceiveValue(
+                WebChromeClient.FileChooserParams.parseResult(
+                    resultCode,
+                    data
+                )
+            )
+            uploadMessage = null
+
         }
     }
 
