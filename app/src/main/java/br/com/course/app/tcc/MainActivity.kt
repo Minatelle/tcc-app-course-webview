@@ -1,6 +1,7 @@
 package br.com.course.app.tcc
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.CookieSyncManager
 import android.webkit.PermissionRequest
@@ -17,6 +19,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -37,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     )
 
     private lateinit var webView: WebView
+    private lateinit var frameView: FrameLayout
 
     val REQUEST_SELECT_FILE = 100
     private val FILECHOOSER_RESULTCODE = 1
@@ -44,13 +48,30 @@ class MainActivity : AppCompatActivity() {
 
     private var mUploadMessage: ValueCallback<*>? = null
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main)
 
         webView = findViewById(R.id.webview)
+        frameView = findViewById(R.id.frameview)
         webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+                super.onShowCustomView(view, callback)
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                webView.visibility = View.GONE
+                frameView.visibility = View.VISIBLE
+                frameView.addView(view)
+            }
+
+            override fun onHideCustomView() {
+                super.onHideCustomView()
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                webView.visibility = View.VISIBLE
+                frameView.visibility = View.GONE
+            }
+
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             override fun onPermissionRequest(request: PermissionRequest) {
                 request.grant(request.resources)
@@ -112,7 +133,10 @@ class MainActivity : AppCompatActivity() {
                 super.onPageFinished(view, url)
             }
         }
-        webView.loadUrl(WEB_VIEW_URL)
+
+        if (savedInstanceState == null) {
+            webView.loadUrl(WEB_VIEW_URL)
+        }
 
         askForPermissions()
     }
@@ -123,10 +147,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (webView.copyBackForwardList().currentIndex > 0) {
-            webView.goBack()
-        } else {
+        if(WEB_VIEW_URL == webView.url) {
             super.onBackPressed()
+        } else {
+            webView.goBack()
         }
     }
 
